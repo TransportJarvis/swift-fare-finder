@@ -35,9 +35,9 @@ export const BookingForm = () => {
     }
   };
 
-  // Calcul du prix : distance * 2 * 1.5
+  // Calcul du prix : 10 * 10 * 1.5
   const calculatePrice = () => {
-    return estimatedDistance * 2 * 1.5;
+    return 10 * 10 * 1.5;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -162,10 +162,6 @@ export const BookingForm = () => {
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
                     <span>Distance estimée:</span>
                     <span className="font-medium">{estimatedDistance} km</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>Calcul:</span>
-                    <span className="font-medium">{estimatedDistance} × 2 × 1.5</span>
                   </div>
                   <div className="text-3xl font-bold text-primary">
                     {calculatePrice().toFixed(2)} €

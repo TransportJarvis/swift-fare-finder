@@ -17,7 +17,7 @@ const Index = () => {
         </div>
         <div className="relative z-10 text-center text-white px-4 max-w-4xl">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            CourseExpress
+            AtlasExpress
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-white/90">
             Réservez votre course en quelques clics. Rapide, fiable, transparent.
@@ -47,8 +47,7 @@ const Index = () => {
               Réservez votre course
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Entrez vos informations et obtenez un devis instantané. 
-              Notre formule simple : <strong>Distance × 2 × 1.5 = Prix</strong>
+              Entrez vos informations et obtenez un devis instantané.
             </p>
           </div>
           
@@ -84,7 +83,7 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold">Prix transparents</h3>
               <p className="text-muted-foreground">
-                Formule claire et sans surprise : Distance × 2 × 1.5
+                Tarifs clairs et sans surprise
               </p>
             </div>
           </div>
@@ -93,9 +92,13 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="py-8 bg-foreground text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h4 className="text-xl font-semibold mb-2">CourseExpress</h4>
+        <div className="container mx-auto px-4 text-center space-y-3">
+          <h4 className="text-xl font-semibold">AtlasExpress</h4>
           <p className="text-white/70">Votre service de livraison de confiance</p>
+          <div className="text-sm text-white/80 space-y-1">
+            <p>📍 Azazga, Tizi Ouzou</p>
+            <p>📞 07 66 05 08 33</p>
+          </div>
         </div>
       </footer>
     </div>
