@@ -1,6 +1,7 @@
 import { BookingForm } from '@/components/BookingForm';
 import heroImage from '@/assets/hero-delivery.jpg';
 import { Truck, Clock, Shield, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   return (
@@ -92,12 +93,31 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="py-8 bg-foreground text-white">
-        <div className="container mx-auto px-4 text-center space-y-3">
-          <h4 className="text-xl font-semibold">AtlasExpress</h4>
-          <p className="text-white/70">Votre service de livraison de confiance</p>
-          <div className="text-sm text-white/80 space-y-1">
-            <p>📍 Azazga, Tizi Ouzou</p>
-            <p>📞 07 66 05 08 33</p>
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto text-center md:text-left">
+            <div>
+              <h4 className="text-xl font-semibold mb-3">AtlasExpress</h4>
+              <p className="text-white/70">Votre service de livraison de confiance</p>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-3">Coordonnées</h5>
+              <div className="text-sm text-white/80 space-y-1">
+                <p>📍 Azazga, Tizi Ouzou</p>
+                <p>📞 07 66 05 08 33</p>
+                <p>✉️ contact@atlasexpress.dz</p>
+              </div>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-3">Liens utiles</h5>
+              <div className="text-sm space-y-1">
+                <p><Link to="/contact" className="text-white/80 hover:text-white transition-colors">Contact</Link></p>
+                <p><Link to="/privacy-policy" className="text-white/80 hover:text-white transition-colors">Politique de confidentialité</Link></p>
+                <p><Link to="/terms-of-service" className="text-white/80 hover:text-white transition-colors">Conditions d'utilisation</Link></p>
+              </div>
+            </div>
+          </div>
+          <div className="text-center text-white/60 text-sm mt-8 pt-6 border-t border-white/20">
+            <p>&copy; {new Date().getFullYear()} AtlasExpress. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
