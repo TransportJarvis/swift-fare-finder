@@ -18,12 +18,18 @@ export type Database = {
         Row: {
           created_at: string
           estimated_distance: number | null
+          estimated_duration: number | null
           estimated_price: number | null
           id: string
+          multiplier: number | null
           point_a: string
           point_b: string
+          price_base: number | null
+          price_per_km: number | null
+          price_per_min: number | null
           product_type: string
           remarks: string | null
+          service_level: string
           status: string
           updated_at: string
           user_id: string
@@ -32,12 +38,18 @@ export type Database = {
         Insert: {
           created_at?: string
           estimated_distance?: number | null
+          estimated_duration?: number | null
           estimated_price?: number | null
           id?: string
+          multiplier?: number | null
           point_a: string
           point_b: string
+          price_base?: number | null
+          price_per_km?: number | null
+          price_per_min?: number | null
           product_type: string
           remarks?: string | null
+          service_level?: string
           status?: string
           updated_at?: string
           user_id: string
@@ -46,12 +58,18 @@ export type Database = {
         Update: {
           created_at?: string
           estimated_distance?: number | null
+          estimated_duration?: number | null
           estimated_price?: number | null
           id?: string
+          multiplier?: number | null
           point_a?: string
           point_b?: string
+          price_base?: number | null
+          price_per_km?: number | null
+          price_per_min?: number | null
           product_type?: string
           remarks?: string | null
+          service_level?: string
           status?: string
           updated_at?: string
           user_id?: string
