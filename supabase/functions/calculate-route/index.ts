@@ -27,10 +27,24 @@ const PRICING_CONFIG = {
   },
 };
 
+// Product type multipliers
+const PRODUCT_TYPE_MULTIPLIERS = {
+  'froid': 1.5,  // Cold products require special handling
+  'fragile': 1.3,  // Fragile items need extra care
+  'nourriture': 1.2,  // Food items
+  'colis': 1.0,  // Standard parcels
+  'documents': 0.9,  // Documents are lighter and simpler
+};
+
+// Weight-based pricing (per kg)
+const WEIGHT_PER_KG = 0.5;
+
 interface RouteRequest {
   pointA: string;
   pointB: string;
   serviceLevel: 'express' | 'standard' | 'economy';
+  weight?: number;
+  productType?: string;
 }
 
 serve(async (req) => {
@@ -40,7 +54,7 @@ serve(async (req) => {
   }
 
   try {
-    const { pointA, pointB, serviceLevel = 'standard' }: RouteRequest = await req.json();
+    const { pointA, pointB, serviceLevel = 'standard', weight = 0, productType = 'colis' }: RouteRequest = await req.json();
 
     console.log(`Calculating route from ${pointA} to ${pointB} with service level ${serviceLevel}`);
 
@@ -101,7 +115,7 @@ serve(async (req) => {
       const duration = (distance / 50) * 60; // Assume 50 km/h average speed
       
       const pricing = PRICING_CONFIG[serviceLevel];
-      const price = calculatePrice(distance, duration, pricing);
+      const price = calculatePrice(distance, duration, pricing, weight, productType);
 
       return new Response(
         JSON.stringify({
@@ -113,6 +127,8 @@ serve(async (req) => {
             per_km: pricing.per_km,
             per_min: pricing.per_min,
             multiplier: pricing.multiplier,
+            weight_charge: Math.round(weight * WEIGHT_PER_KG * 100) / 100,
+            product_type_multiplier: PRODUCT_TYPE_MULTIPLIERS[productType as keyof typeof PRODUCT_TYPE_MULTIPLIERS] || 1.0,
           },
           service_level: serviceLevel,
         }),
@@ -134,7 +150,7 @@ serve(async (req) => {
 
     // Calculate price based on service level
     const pricing = PRICING_CONFIG[serviceLevel];
-    const price = calculatePrice(distanceKm, durationMin, pricing);
+    const price = calculatePrice(distanceKm, durationMin, pricing, weight, productType);
 
     return new Response(
       JSON.stringify({
@@ -146,6 +162,8 @@ serve(async (req) => {
           per_km: pricing.per_km,
           per_min: pricing.per_min,
           multiplier: pricing.multiplier,
+          weight_charge: Math.round(weight * WEIGHT_PER_KG * 100) / 100,
+          product_type_multiplier: PRODUCT_TYPE_MULTIPLIERS[productType as keyof typeof PRODUCT_TYPE_MULTIPLIERS] || 1.0,
         },
         service_level: serviceLevel,
       }),
@@ -168,13 +186,19 @@ serve(async (req) => {
 function calculatePrice(
   distanceKm: number,
   durationMin: number,
-  pricing: typeof PRICING_CONFIG.standard
+  pricing: typeof PRICING_CONFIG.standard,
+  weight: number,
+  productType: string
 ): number {
   const basePrice = pricing.base;
   const distancePrice = distanceKm * pricing.per_km;
   const timePrice = durationMin * pricing.per_min;
-  const totalBeforeMultiplier = basePrice + distancePrice + timePrice;
-  return totalBeforeMultiplier * pricing.multiplier;
+  const weightPrice = weight * WEIGHT_PER_KG;
+  
+  const subtotal = basePrice + distancePrice + timePrice + weightPrice;
+  const productMultiplier = PRODUCT_TYPE_MULTIPLIERS[productType as keyof typeof PRODUCT_TYPE_MULTIPLIERS] || 1.0;
+  
+  return subtotal * pricing.multiplier * productMultiplier;
 }
 
 function calculateHaversineDistance(

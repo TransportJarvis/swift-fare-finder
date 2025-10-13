@@ -27,6 +27,8 @@ interface RouteResult {
     per_km: number;
     per_min: number;
     multiplier: number;
+    weight_charge: number;
+    product_type_multiplier: number;
   };
   service_level: string;
 }
@@ -58,6 +60,8 @@ export const BookingForm = () => {
           pointA: bookingData.pointA,
           pointB: bookingData.pointB,
           serviceLevel: bookingData.serviceLevel,
+          weight: parseFloat(bookingData.weight),
+          productType: bookingData.productType,
         },
       });
 
@@ -190,13 +194,11 @@ export const BookingForm = () => {
                     <SelectValue placeholder="Sélectionner le type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="documents">Documents</SelectItem>
-                    <SelectItem value="colis">Colis standard</SelectItem>
-                    <SelectItem value="nourriture">Nourriture</SelectItem>
-                    <SelectItem value="vetements">Vêtements</SelectItem>
-                    <SelectItem value="electronique">Électronique</SelectItem>
-                    <SelectItem value="fragile">Produits fragiles</SelectItem>
-                    <SelectItem value="autre">Autre</SelectItem>
+                    <SelectItem value="documents">Documents (×0.9)</SelectItem>
+                    <SelectItem value="colis">Colis standard (×1.0)</SelectItem>
+                    <SelectItem value="nourriture">Nourriture (×1.2)</SelectItem>
+                    <SelectItem value="fragile">Produits fragiles (×1.3)</SelectItem>
+                    <SelectItem value="froid">Produits froids (×1.5)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -270,9 +272,17 @@ export const BookingForm = () => {
                       <span className="text-muted-foreground">Prix par minute ({routeResult.price_breakdown.per_min}€/min):</span>
                       <span className="font-medium">{(routeResult.duration * routeResult.price_breakdown.per_min).toFixed(2)} €</span>
                     </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Supplément poids ({bookingData.weight} kg):</span>
+                      <span className="font-medium">{routeResult.price_breakdown.weight_charge.toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Type de produit ({bookingData.productType}):</span>
+                      <span className="font-medium">×{routeResult.price_breakdown.product_type_multiplier}</span>
+                    </div>
                     {routeResult.price_breakdown.multiplier !== 1 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Multiplicateur service:</span>
+                        <span className="text-muted-foreground">Niveau de service ({routeResult.service_level}):</span>
                         <span className="font-medium">×{routeResult.price_breakdown.multiplier}</span>
                       </div>
                     )}
