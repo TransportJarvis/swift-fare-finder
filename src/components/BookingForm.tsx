@@ -39,7 +39,7 @@ export const BookingForm = () => {
     pointA: '',
     pointB: '',
     weight: '',
-    productType: '',
+    productType: 'colis',
     remarks: '',
     serviceLevel: 'standard'
   });
@@ -100,28 +100,24 @@ export const BookingForm = () => {
     setIsConfirming(true);
 
     try {
-      const weightValue = parseFloat(bookingData.weight);
-
-      const { error } = await supabase.from('booking_requests').insert([
-        {
-          point_a: bookingData.pointA,
-          point_b: bookingData.pointB,
-          weight: Number.isFinite(weightValue) ? weightValue : 0,
-          product_type: bookingData.productType,
-          service_level: routeResult.service_level,
+      const { data, error } = await supabase.functions.invoke('submit-booking-request', {
+        body: {
+          pointA: bookingData.pointA,
+          pointB: bookingData.pointB,
+          serviceLevel: routeResult.service_level,
+          weight: parseFloat(bookingData.weight),
+          productType: bookingData.productType,
           remarks: bookingData.remarks || null,
-          distance_km: routeResult.distance,
-          duration_min: routeResult.duration,
-          price_total: routeResult.price,
-          price_breakdown: routeResult.price_breakdown,
         },
-      ]);
+      });
 
       if (error) throw error;
 
       toast({
         title: 'Demande enregistrée',
-        description: 'Votre demande de réservation a été envoyée. Nous vous contacterons rapidement.',
+        description: data?.quote
+          ? `Votre demande est confirmée. Prix estimé: ${data.quote.price} €`
+          : 'Votre demande de réservation a été envoyée. Nous vous contacterons rapidement.',
       });
 
       setRouteResult(null);
@@ -129,7 +125,7 @@ export const BookingForm = () => {
         pointA: '',
         pointB: '',
         weight: '',
-        productType: '',
+        productType: 'colis',
         remarks: '',
         serviceLevel: 'standard',
       });
