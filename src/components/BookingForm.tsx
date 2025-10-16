@@ -39,13 +39,14 @@ export const BookingForm = () => {
     pointA: '',
     pointB: '',
     weight: '',
-    productType: '',
+    productType: 'colis',
     remarks: '',
     serviceLevel: 'standard'
   });
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleCalculateRoute = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +84,60 @@ export const BookingForm = () => {
       });
     } finally {
       setIsCalculating(false);
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!routeResult) {
+      toast({
+        title: 'Calcul requis',
+        description: 'Veuillez calculer un devis avant de confirmer la réservation.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsConfirming(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('submit-booking-request', {
+        body: {
+          pointA: bookingData.pointA,
+          pointB: bookingData.pointB,
+          serviceLevel: routeResult.service_level,
+          weight: parseFloat(bookingData.weight),
+          productType: bookingData.productType,
+          remarks: bookingData.remarks || null,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Demande enregistrée',
+        description: data?.quote
+          ? `Votre demande est confirmée. Prix estimé: ${data.quote.price} €`
+          : 'Votre demande de réservation a été envoyée. Nous vous contacterons rapidement.',
+      });
+
+      setRouteResult(null);
+      setBookingData({
+        pointA: '',
+        pointB: '',
+        weight: '',
+        productType: 'colis',
+        remarks: '',
+        serviceLevel: 'standard',
+      });
+    } catch (error) {
+      console.error('Error saving booking request:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'enregistrer votre demande. Veuillez réessayer.",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -297,11 +352,21 @@ export const BookingForm = () => {
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     className="w-full mt-4 bg-success hover:bg-success/90"
                     size="lg"
+                    type="button"
+                    onClick={handleConfirmBooking}
+                    disabled={isConfirming || !routeResult}
                   >
-                    Confirmer la réservation
+                    {isConfirming ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      'Confirmer la réservation'
+                    )}
                   </Button>
                 </div>
               </CardContent>

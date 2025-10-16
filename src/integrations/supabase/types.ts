@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_requests: {
+        Row: {
+          created_at: string
+          distance_km: number | null
+          duration_min: number | null
+          id: string
+          point_a: string
+          point_b: string
+          price_breakdown: Json | null
+          price_total: number | null
+          product_type: string
+          remarks: string | null
+          service_level: string
+          status: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          distance_km?: number | null
+          duration_min?: number | null
+          id?: string
+          point_a: string
+          point_b: string
+          price_breakdown?: Json | null
+          price_total?: number | null
+          product_type: string
+          remarks?: string | null
+          service_level?: string
+          status?: string
+          weight: number
+        }
+        Update: {
+          created_at?: string
+          distance_km?: number | null
+          duration_min?: number | null
+          id?: string
+          point_a?: string
+          point_b?: string
+          price_breakdown?: Json | null
+          price_total?: number | null
+          product_type?: string
+          remarks?: string | null
+          service_level?: string
+          status?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           created_at: string
