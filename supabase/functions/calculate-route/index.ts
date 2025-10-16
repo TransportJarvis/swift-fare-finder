@@ -62,7 +62,10 @@ serve(async (req) => {
       throw new Error('Both pointA and pointB are required');
     }
 
-    // Geocode addresses using OpenRouteService (free tier, no API key needed for basic usage)
+    const sanitizedWeight = isFinite(weight) && weight > 0 ? weight : 0;
+    const normalizedProductType = (productType || 'colis').toLowerCase();
+
+    // Geocode addresses using Nominatim (OpenStreetMap) service
     const geocodeA = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(pointA)}&limit=1`,
       {
@@ -93,64 +96,16 @@ serve(async (req) => {
 
     console.log(`Geocoded coordinates: A=${coordsA}, B=${coordsB}`);
 
-    // Calculate route using OpenRouteService (free public API)
-    const routeResponse = await fetch(
-      'https://api.openrouteservice.org/v2/directions/driving-car',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          coordinates: [coordsA, coordsB],
-        }),
-      }
-    );
+    const routeSummary = await getRouteSummary(coordsA, coordsB);
 
-    if (!routeResponse.ok) {
-      // Fallback to simple Haversine distance calculation if routing fails
-      console.log('Routing API failed, using Haversine distance');
-      const distance = calculateHaversineDistance(coordsA[1], coordsA[0], coordsB[1], coordsB[0]);
-      const duration = (distance / 50) * 60; // Assume 50 km/h average speed
-      
-      const pricing = PRICING_CONFIG[serviceLevel];
-      const price = calculatePrice(distance, duration, pricing, weight, productType);
-
-      return new Response(
-        JSON.stringify({
-          distance: Math.round(distance * 100) / 100,
-          duration: Math.round(duration),
-          price: Math.round(price * 100) / 100,
-          price_breakdown: {
-            base: pricing.base,
-            per_km: pricing.per_km,
-            per_min: pricing.per_min,
-            multiplier: pricing.multiplier,
-            weight_charge: Math.round(weight * WEIGHT_PER_KG * 100) / 100,
-            product_type_multiplier: PRODUCT_TYPE_MULTIPLIERS[productType as keyof typeof PRODUCT_TYPE_MULTIPLIERS] || 1.0,
-          },
-          service_level: serviceLevel,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const routeData = await routeResponse.json();
-    const route = routeData.routes[0];
-    
-    // Distance in kilometers
-    const distanceKm = route.summary.distance / 1000;
-    // Duration in minutes
-    const durationMin = route.summary.duration / 60;
+    const distanceKm = routeSummary.distanceKm;
+    const durationMin = routeSummary.durationMin;
 
     console.log(`Route calculated: ${distanceKm} km, ${durationMin} minutes`);
 
     // Calculate price based on service level
     const pricing = PRICING_CONFIG[serviceLevel];
-    const price = calculatePrice(distanceKm, durationMin, pricing, weight, productType);
+    const price = calculatePrice(distanceKm, durationMin, pricing, sanitizedWeight, normalizedProductType);
 
     return new Response(
       JSON.stringify({
@@ -162,8 +117,9 @@ serve(async (req) => {
           per_km: pricing.per_km,
           per_min: pricing.per_min,
           multiplier: pricing.multiplier,
-          weight_charge: Math.round(weight * WEIGHT_PER_KG * 100) / 100,
-          product_type_multiplier: PRODUCT_TYPE_MULTIPLIERS[productType as keyof typeof PRODUCT_TYPE_MULTIPLIERS] || 1.0,
+          weight_charge: Math.round(sanitizedWeight * WEIGHT_PER_KG * 100) / 100,
+          product_type_multiplier:
+            PRODUCT_TYPE_MULTIPLIERS[normalizedProductType as keyof typeof PRODUCT_TYPE_MULTIPLIERS] || 1.0,
         },
         service_level: serviceLevel,
       }),
@@ -183,6 +139,75 @@ serve(async (req) => {
   }
 });
 
+async function getRouteSummary(coordsA: number[], coordsB: number[]) {
+  const apiKey = Deno.env.get('OPENROUTESERVICE_API_KEY');
+
+  if (apiKey) {
+    try {
+      const routeResponse = await fetch(
+        'https://api.openrouteservice.org/v2/directions/driving-car',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': apiKey,
+          },
+          body: JSON.stringify({
+            coordinates: [coordsA, coordsB],
+          }),
+        }
+      );
+
+      if (routeResponse.ok) {
+        const routeData = await routeResponse.json();
+        const route = routeData.routes[0];
+
+        return {
+          distanceKm: route.summary.distance / 1000,
+          durationMin: route.summary.duration / 60,
+        };
+      }
+
+      console.warn('OpenRouteService request failed, falling back to OSRM', await routeResponse.text());
+    } catch (error) {
+      console.warn('OpenRouteService threw an error, falling back to OSRM', error);
+    }
+  }
+
+  try {
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordsA[0]},${coordsA[1]};${coordsB[0]},${coordsB[1]}?overview=false&alternatives=false`;
+    const osrmResponse = await fetch(osrmUrl, {
+      headers: {
+        'User-Agent': 'AtlasExpress-Delivery-App',
+      },
+    });
+
+    if (osrmResponse.ok) {
+      const osrmData = await osrmResponse.json();
+      if (osrmData.routes && osrmData.routes.length > 0) {
+        const route = osrmData.routes[0];
+        return {
+          distanceKm: route.distance / 1000,
+          durationMin: route.duration / 60,
+        };
+      }
+    } else {
+      console.warn('OSRM request failed, falling back to Haversine', await osrmResponse.text());
+    }
+  } catch (error) {
+    console.warn('OSRM threw an error, falling back to Haversine', error);
+  }
+
+  const distance = calculateHaversineDistance(coordsA[1], coordsA[0], coordsB[1], coordsB[0]);
+  const duration = (distance / 50) * 60; // Assume 50 km/h average speed
+
+  return {
+    distanceKm: distance,
+    durationMin: duration,
+  };
+}
+
 function calculatePrice(
   distanceKm: number,
   durationMin: number,
@@ -193,11 +218,11 @@ function calculatePrice(
   const basePrice = pricing.base;
   const distancePrice = distanceKm * pricing.per_km;
   const timePrice = durationMin * pricing.per_min;
-  const weightPrice = weight * WEIGHT_PER_KG;
-  
+  const weightPrice = Math.max(weight, 0) * WEIGHT_PER_KG;
+
   const subtotal = basePrice + distancePrice + timePrice + weightPrice;
   const productMultiplier = PRODUCT_TYPE_MULTIPLIERS[productType as keyof typeof PRODUCT_TYPE_MULTIPLIERS] || 1.0;
-  
+
   return subtotal * pricing.multiplier * productMultiplier;
 }
 
