@@ -28,12 +28,16 @@ export type Database = {
           price_per_km: number | null
           price_per_min: number | null
           product_type: string
+          product_type_multiplier: number | null
+          quote_id: string | null
           remarks: string | null
           service_level: string
           status: string
           updated_at: string
+          used_fallback: boolean | null
           user_id: string
           weight: number
+          weight_charge: number | null
         }
         Insert: {
           created_at?: string
@@ -48,12 +52,16 @@ export type Database = {
           price_per_km?: number | null
           price_per_min?: number | null
           product_type: string
+          product_type_multiplier?: number | null
+          quote_id?: string | null
           remarks?: string | null
           service_level?: string
           status?: string
           updated_at?: string
+          used_fallback?: boolean | null
           user_id: string
           weight: number
+          weight_charge?: number | null
         }
         Update: {
           created_at?: string
@@ -68,12 +76,16 @@ export type Database = {
           price_per_km?: number | null
           price_per_min?: number | null
           product_type?: string
+          product_type_multiplier?: number | null
+          quote_id?: string | null
           remarks?: string | null
           service_level?: string
           status?: string
           updated_at?: string
+          used_fallback?: boolean | null
           user_id?: string
           weight?: number
+          weight_charge?: number | null
         }
         Relationships: []
       }
@@ -148,6 +160,76 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      route_quotes: {
+        Row: {
+          created_at: string
+          distance: number
+          duration: number
+          id: string
+          multiplier: number
+          point_a: string
+          point_b: string
+          price_base: number
+          price_per_km: number
+          price_per_min: number
+          price_total: number
+          product_type: string
+          product_type_multiplier: number
+          service_level: string
+          used_fallback: boolean
+          user_id: string | null
+          weight: number | null
+          weight_charge: number | null
+        }
+        Insert: {
+          created_at?: string
+          distance: number
+          duration: number
+          id?: string
+          multiplier: number
+          point_a: string
+          point_b: string
+          price_base: number
+          price_per_km: number
+          price_per_min: number
+          price_total: number
+          product_type: string
+          product_type_multiplier?: number | null
+          service_level: string
+          used_fallback?: boolean
+          user_id?: string | null
+          weight?: number | null
+          weight_charge?: number | null
+        }
+        Update: {
+          created_at?: string
+          distance?: number
+          duration?: number
+          id?: string
+          multiplier?: number
+          point_a?: string
+          point_b?: string
+          price_base?: number
+          price_per_km?: number
+          price_per_min?: number
+          price_total?: number
+          product_type?: string
+          product_type_multiplier?: number | null
+          service_level?: string
+          used_fallback?: boolean
+          user_id?: string | null
+          weight?: number | null
+          weight_charge?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_quotes_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
